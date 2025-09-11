@@ -25,9 +25,9 @@ function D3Init(map) {
   InitDrawMode(map);
 }
 
+
+var currentHexagon;
 function DrawSquqreGrid(map) {
-
-
   fetch('penghu_hex_grid.geojson')
   .then(response => {
       if(!response.ok) {
@@ -36,6 +36,7 @@ function DrawSquqreGrid(map) {
       return response.json();
     })
     .then(geojsonData => {
+      // Create the hexagons using geojson covering all islands
       const areaPaths = g.selectAll('path')
         .data(geojsonData.features)
         .join('path')
@@ -45,22 +46,24 @@ function DrawSquqreGrid(map) {
         .attr('stroke', 'black')
         .attr("z-index", 3000)
         .attr('stroke-width', 2.5)
-        .on("mouseover", function(d){
-          d3.select(this)
-            .style('fill-opacity', 0.5);
+        .on("mouseover", function(e){
+          if(!centerPoint) {
+            d3.select(this).style('fill-opacity', 0.5);
+            currentHexagon = e; 
+          }
         })
-        .on("mouseout", function(d){
-          d3.select(this).transition()
-            .duration('200')
-            .style("fill-opacity", 0);
+        .on("mouseout", function(e){
+          if(!centerPoint) {
+            d3.select(this).transition()
+              .duration('200')
+              .style("fill-opacity", 0);
+          }
         })
-        .on("click", function(d){
+        .on("click", function(e){
         })
-        // Function to place svg based on zoom
+        // Redraw hexagons when map is zoomed 
         const onZoom = () => areaPaths.attr('d', pathCreator);
-        // initialize positioning
         onZoom();
-        // reset whenever map is moved
         map.on('zoomend', onZoom);
     })
 
@@ -77,35 +80,49 @@ function InitDrawMode(map){
     return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
   }
 
+  function GetCenterPoint(bbox) {
+    const cx = bbox.x + bbox.width / 2;  
+    const cy = bbox.y + bbox.height / 2; 
+    return {cx, cy}; 
+  }
+
   map.on('click', function(e) {
     // cirlce exist
     if(!centerPoint) { 
-      centerPoint = e.latlng;
+      // Snap to hover hexagon center
+      d3.select(currentHexagon.target).style('fill', 'yellow');
+      centerPoint = L.geoJSON(currentHexagon.target.__data__).getBounds().getCenter();
+
       if(circle) circle.remove();
       circle = g.append('circle')
           .attr('fill', 'steelblue')
           .attr('fill-opacity', 0.2)
           .attr('stroke', 'black')
           .attr('z-index', 2500)
-          .attr('cx', map.latLngToLayerPoint(e.latlng).x)
-          .attr('cy', map.latLngToLayerPoint(e.latlng).y)
+          .attr('cx', map.latLngToLayerPoint(centerPoint).x)
+          .attr('cy', map.latLngToLayerPoint(centerPoint).y)
           .attr('r', 0)
           .attr('pointer-events', 'none');
     } else if (!secondPoint) {
+      // Circle center is determined
       secondPoint = e.latlng;
       circle.attr('r', CalRadius(centerPoint, secondPoint));
     } else {
+      // Remove selection circle
       circle
         .transition()
         .duration(500)
         .style('opacity', 0)
         .remove();
+      d3.selectAll('path').transition().duration(500).style('fill-opacity', 0);
+      d3.select(currentHexagon.target).style('fill', 'red'); 
       circle = null;
       centerPoint = null;
       secondPoint = null;
     }
   })
 
+  // Function to update selection circle when zoomed 
   function update() { 
     if(circle) {
       circle
@@ -117,10 +134,23 @@ function InitDrawMode(map){
     }
   }
 
+  // Function to show preview of the selected hexagons
   function preview(e) {
     if(circle && !secondPoint) {
-      circle
-      .attr('r', CalRadius(centerPoint, e.latlng));
+      circle.attr('r', CalRadius(centerPoint, e.latlng));
+
+      // Preview selected hexagon
+      d3.selectAll('path').filter(function() {
+        const {cx, cy}= GetCenterPoint(this.getBBox());
+        const center = map.latLngToLayerPoint(centerPoint); 
+        return Math.pow(cx - center.x, 2) + Math.pow(cy - center.y, 2) <= Math.pow(CalRadius(centerPoint, e.latlng), 2);
+      }).style('fill-opacity', 1);
+      // unselect
+      d3.selectAll('path').filter(function() {
+        const {cx, cy}= GetCenterPoint(this.getBBox());
+        const center = map.latLngToLayerPoint(centerPoint); 
+        return Math.pow(cx - center.x, 2) + Math.pow(cy - center.y, 2) > Math.pow(CalRadius(centerPoint, e.latlng), 2);
+      }).style('fill-opacity', 0);
     }
   }
 
