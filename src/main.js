@@ -1,5 +1,7 @@
-import L from 'leaflet';
-import glify from 'leaflet.glify';
+import * as L from 'leaflet';
+import "leaflet/dist/leaflet.css";
+import * as d3 from "d3";
+import {D3Init, DrawSquqreGrid} from './d3Drawing.js'
 
 var map = L.map('map').setView([23.561942, 119.612923], 13);
 
@@ -18,50 +20,6 @@ var baseLayers = {
 
 L.control.layers(baseLayers).addTo(map);
 
-
-
-
-
-var currentGeoJsonLayer = null;
-
-function loadGeoJSON(filename) {
-    if (currentGeoJsonLayer) {
-        currentGeoJsonLayer.remove();
-    }
-
-    fetch(filename)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(geojsonData => {
-        currentGeoJsonLayer = glify.shapes({
-            map,
-            data: geojsonData,
-            color: {r: 255,g: 0, b: 0, a:0.4},
-            border: true,
-        }).addTo(map);
-    })
-    .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-    });
-}
-
-
-
-// Initial load
-loadGeoJSON('penghu_hex_grid.geojson');
-
-document.getElementById('showBoundaries').addEventListener('click', function() {
-    loadGeoJSON('penghu.geojson');
-});
-
-document.getElementById('showHexGrid').addEventListener('click', function() {
-    loadGeoJSON('penghu_hex_grid.geojson');
-});
-
-document.getElementById('showSquareGrid').addEventListener('click', function() {
-    loadGeoJSON('penghu_square_grid.geojson'); // Assuming 'penghu_hex.geojson' is the other file
-});
+// Grids
+D3Init(map);
+DrawSquqreGrid(map);

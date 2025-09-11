@@ -12,7 +12,7 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
-    "leaflet": "^1.9.4",
-    "leaflet.glify": "^3.3.1"
+    "d3": "^7.9.0",
+    "leaflet": "^1.9.4"
   }
 }
