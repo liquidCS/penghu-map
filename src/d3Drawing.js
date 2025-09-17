@@ -28,7 +28,7 @@ function D3Init(map) {
 
 var currentHexagon;
 function DrawSquqreGrid(map) {
-  fetch('penghu_hex_grid.geojson')
+  fetch('penghu_smallHex_grid.geojson')
   .then(response => {
       if(!response.ok) {
         throw new Error('network response was not ok');
@@ -48,7 +48,7 @@ function DrawSquqreGrid(map) {
         .attr('stroke-width', 2.5)
         .on("mouseover", function(e){
           if(!centerPoint) {
-            d3.select(this).style('fill-opacity', 0.5);
+            d3.select(this).attr('fill-opacity', 0.5);
             currentHexagon = e; 
           }
         })
@@ -56,7 +56,7 @@ function DrawSquqreGrid(map) {
           if(!centerPoint) {
             d3.select(this).transition()
               .duration('200')
-              .style("fill-opacity", 0);
+              .attr("fill-opacity", 0);
           }
         })
         .on("click", function(e){
@@ -90,7 +90,7 @@ function InitDrawMode(map){
     // cirlce exist
     if(!centerPoint) { 
       // Snap to hover hexagon center
-      d3.select(currentHexagon.target).style('fill', 'yellow');
+      d3.select(currentHexagon.target).attr('fill', 'yellow');
       centerPoint = L.geoJSON(currentHexagon.target.__data__).getBounds().getCenter();
 
       if(circle) circle.remove();
@@ -114,8 +114,8 @@ function InitDrawMode(map){
         .duration(500)
         .style('opacity', 0)
         .remove();
-      d3.selectAll('path').transition().duration(500).style('fill-opacity', 0);
-      d3.select(currentHexagon.target).style('fill', 'red'); 
+      d3.selectAll('path').transition().duration(500).attr('fill-opacity', 0);
+      d3.select(currentHexagon.target).attr('fill', 'red'); 
       circle = null;
       centerPoint = null;
       secondPoint = null;
@@ -139,18 +139,28 @@ function InitDrawMode(map){
     if(circle && !secondPoint) {
       circle.attr('r', CalRadius(centerPoint, e.latlng));
 
-      // Preview selected hexagon
-      d3.selectAll('path').filter(function() {
+      // Change selected color 
+      d3.selectAll('path').attr('fill-opacity', function() {
         const {cx, cy}= GetCenterPoint(this.getBBox());
         const center = map.latLngToLayerPoint(centerPoint); 
-        return Math.pow(cx - center.x, 2) + Math.pow(cy - center.y, 2) <= Math.pow(CalRadius(centerPoint, e.latlng), 2);
-      }).style('fill-opacity', 1);
-      // unselect
-      d3.selectAll('path').filter(function() {
-        const {cx, cy}= GetCenterPoint(this.getBBox());
-        const center = map.latLngToLayerPoint(centerPoint); 
-        return Math.pow(cx - center.x, 2) + Math.pow(cy - center.y, 2) > Math.pow(CalRadius(centerPoint, e.latlng), 2);
-      }).style('fill-opacity', 0);
+        if (Math.pow(cx - center.x, 2) + Math.pow(cy - center.y, 2) > Math.pow(CalRadius(centerPoint, e.latlng), 2)) {
+          return 0;
+        }
+        else return 1;
+      })
+
+     //  // Preview selected hexagon
+     //  d3.selectAll('path').filter(function() {
+     //    const {cx, cy}= GetCenterPoint(this.getBBox());
+     //    const center = map.latLngToLayerPoint(centerPoint); 
+     //    return Math.pow(cx - center.x, 2) + Math.pow(cy - center.y, 2) <= Math.pow(CalRadius(centerPoint, e.latlng), 2);
+     //  }).style('fill-opacity', 1);
+     //  // unselect
+     //  d3.selectAll('path').filter(function() {
+     //    const {cx, cy}= GetCenterPoint(this.getBBox());
+     //    const center = map.latLngToLayerPoint(centerPoint); 
+     //    return Math.pow(cx - center.x, 2) + Math.pow(cy - center.y, 2) > Math.pow(CalRadius(centerPoint, e.latlng), 2);
+     //  }).style('fill-opacity', 0);
     }
   }
 
