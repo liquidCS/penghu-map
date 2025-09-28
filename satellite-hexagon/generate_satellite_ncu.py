@@ -13,12 +13,9 @@ geojson_file = '../public/penghu_smallHex_grid_bbox_index.geojson'
 gdf = gpd.read_file(geojson_file)
 
 for index, row in gdf.iterrows():
-    if os.path.exists(f'./images/{row['id']}.png'):
-        print('pass: ', row['id'])
-        continue
-    
 
     polygon = row['geometry'].convex_hull
+
 
 
     latlng_bbox = json.loads(row['bbox'])
@@ -34,10 +31,10 @@ for index, row in gdf.iterrows():
     ax.set_xlim(minx, maxx)
     ax.set_ylim(miny, maxy)
     
-    cx.add_basemap(ax, attribution_size=0, source="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", zoom=18) # Add basemap
+    cx.add_basemap(ax, attribution_size=0, source="https://data.csrsr.ncu.edu.tw/SP_PH/SP_latest_NC_PH_3857/{z}/{y}/{x}.png", zoom=18) # Add basemap
 
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0) # make margin smaller
-    plt.savefig(f"./images/{row['id']}.png")
+    plt.savefig(f"./images_ncu/{row['id']}.png")
     plt.close()
 
     time.sleep(0.5)
