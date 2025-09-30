@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 
-
+let DEFAULT_OPACITY = 0.5;
 let overlay, svg, g, projection, pathCreator;
 
 function D3Init(map) {
@@ -28,7 +28,7 @@ function D3Init(map) {
 
 var currentHexagon;
 function DrawSquqreGrid(map) {
-  fetch('penghu_smallHex_grid.geojson')
+  fetch('penghu_CNN_class.json')
   .then(response => {
       if(!response.ok) {
         throw new Error('network response was not ok');
@@ -41,8 +41,32 @@ function DrawSquqreGrid(map) {
         .data(geojsonData.features)
         .join('path')
         .attr('stroke-opacity', 0)
-        .attr('fill-opacity', 0)
-        .attr('fill', 'red')
+        .attr('fill-opacity', DEFAULT_OPACITY)
+        .attr('fill', d=> {
+          let class_result = d.properties.class_result;
+          switch(class_result){
+            case 0:
+              return 'red';
+            case 1:
+              return 'orange';
+            case 2:
+              return 'yellow';
+            case 3:
+              return 'green';
+            case 4:
+              return 'blue';
+            case 5:
+              return 'white';
+            case 6:
+              return 'purple';
+            case 7:
+              return 'black';
+            case 8:
+              return 'brown';
+	    case 9:
+	      return 'aqua';
+          }
+	      })
         .attr('stroke', 'black')
         .attr("z-index", 3000)
         .attr('stroke-width', 2.5)
@@ -56,7 +80,7 @@ function DrawSquqreGrid(map) {
           if(!centerPoint) {
             d3.select(this).transition()
               .duration('200')
-              .attr("fill-opacity", 0);
+              .attr("fill-opacity", DEAFULT_OPACITY);
           }
         })
         .on("click", function(e){

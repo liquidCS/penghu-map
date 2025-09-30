@@ -12,3 +12,16 @@ html, body {
 .leaflet-overlay-pane svg path{
   pointer-events: auto;
 }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.legend-color-box {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border: 1px solid #ccc; /* Add a default border for all color boxes */
+}
